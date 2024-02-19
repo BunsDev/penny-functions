@@ -10,10 +10,15 @@ const {
   CodeLanguage,
 } = require("@chainlink/functions-toolkit");
 const automatedFunctionsConsumerAbi = require("../../abi/crosschainBalance.json");
+const pennypotCoreABI = require("../../abi/pennypot.json");
 const ethers = require("ethers");
 require("@chainlink/env-enc").config();
 
-const consumerAddress = "0x2E8d910D435Db139a0EcF5D4142eAAf393D12B1B";
+const consumerAddress = "0xBE7a31cCD5504Cfc1B8534f18eD163fE69eed2c5";
+const pennypotAddress = "0x0f4529D6cC15CB74756e7C2896cb08D42229647f";
+const SavingsPot = "0x75ef591F5371B2170d00915A4A551Ee843FCe969";
+const user = "0xf2750684eB187fF9f82e2F980f6233707eF5768C";
+const token = "0x88233eEc48594421FA925D614b3a94A2dDC19a08";
 
 const updateRequest = async () => {
   const routerAddress = "0xA9d587a00A31A52Ed70D6026794a8FC5E2F5dCb0";
@@ -32,8 +37,8 @@ const updateRequest = async () => {
 
   const args = [
     "avalanche-testnet",
-    "0x456Ea9c2b9C244dE4F38d1410d6029c67ba6630f",
-    "0x0b9d5D9136855f6FEc3c0993feE6E9CE8a297846",
+    user,
+    token, //token
   ];
 
   const secrets = { apiKey: process.env.COVALENT_API_KEY };
@@ -76,6 +81,7 @@ const updateRequest = async () => {
   console.log(
     `Upload encrypted secret to gateways ${gatewayUrls}. slotId ${slotIdNumber}. Expiration in minutes: ${expirationTimeMinutes}`
   );
+
   // Upload secrets
   const uploadResult = await secretsManager.uploadEncryptedSecretsToDON({
     encryptedSecretsHexstring: encryptedSecretsObj.encryptedSecrets,
@@ -116,14 +122,25 @@ const updateRequest = async () => {
     bytesArgs: [],
   });
 
+  //pennypot
+  const pennypotCore = new ethers.Contract(
+    pennypotAddress,
+    pennypotCoreABI,
+    signer
+  );
+
   // Update request settings
-  const transaction = await automatedFunctionsConsumer.updateRequest(
-    functionsRequestBytesHexString
+  const transaction = await pennypotCore.optIn(
+    ethers.utils.getAddress(SavingsPot),
+    token,
+    3600,
+    functionsRequestBytesHexString,
+    ethers.utils.getAddress(consumerAddress)
   );
 
   // Log transaction details
   console.log(
-    `\n✅ Automated Functions request settings updated! Transaction hash ${transaction.hash} - Check the explorer ${explorerUrl}/tx/${transaction.hash}`
+    `\n✅ Automated savings and balance checker opted in! Transaction hash ${transaction.hash} - Check the explorer ${explorerUrl}/tx/${transaction.hash}`
   );
 };
 

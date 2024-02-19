@@ -22,4 +22,4 @@ for (const item of data.data.items) {
     break;
   }
 }
-return Functions.encodeUint256(parseInt(tokenBalance));
+return Functions.encodeUint256(BigInt(tokenBalance));
